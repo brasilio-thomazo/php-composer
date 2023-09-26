@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+exts=""
+
+for ext in "$@"; do
+    exts="php82-pecl-$ext $exts"
+done
+
+apk add --no-cache --no-interactive $exts
