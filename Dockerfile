@@ -13,14 +13,43 @@ RUN apk add --no-cache --no-interactive bash icu-data-full php82 php82-zip \
 COPY install-php-ext /usr/local/bin/install-php-ext
 COPY install-php-pecl-ext /usr/local/bin/install-php-pecl-ext
 
+#
+# TARGET PHP-COMPOSER
+#
 FROM php_cli as php_composer
-
-RUN apk add --no-cache --no-interactive \
-    $(echo "${EXTS}" | awk -F ' ' '{for(i=1;i<=NF;i++) print "php82-"$i}') \
-    $(echo "${PECL_EXTS}" | awk -F ' ' '{for(i=1;i<=NF;i++) print "php82-pecl-"$i}')
 
 RUN which php || ln -sf /usr/bin/php82 /usr/bin/php
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+#
+# TARGET PHP-FPM
+#
+FROM php_composer as php_fpm
+
+ENV USER_UID=1000
+ENV USER_GID=1000
+
+RUN apk add --no-cache shadow doas php82-fpm
+RUN which php-fpm || ln -sf /usr/sbin/php-fpm82 /usr/bin/php-fpm
+RUN mkdir -p /etc/php/fpm/pool.d/
+
+COPY php-fpm.ini /etc/php/fpm/
+COPY www.ini /etc/php/fpm/pool.d/
+COPY entrypoint /usr/local/bin/
+
+# CREATE USER AND GROUP
+RUN addgroup -g ${USER_UID} app
+RUN adduser -h /home/app -G app -u ${USER_GID} -D app
+# SET PERMISSION TO USER app
+RUN echo 'permit app as root' >> /etc/doas.d/doas.conf
+RUN echo 'permit nopass app as root' >> /etc/doas.d/doas.conf
+
+USER app
+RUN mkdir -p /home/app/public_html /home/app/php-info
+RUN echo "<?php phpinfo(); ?>" > /home/app/php-info/index.php
+
+ENTRYPOINT [ "entrypoint" ]
+EXPOSE 9000 8010
 
 FROM php_cli
