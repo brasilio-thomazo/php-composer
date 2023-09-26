@@ -10,6 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Docker Hub Login
+        uses: docker/login-action@v3.0.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build php-cli image
         uses: docker/build-push-action@v5
         with:
@@ -29,9 +35,3 @@ jobs:
           tags: |
             devoptimus/php-composer:0.0.1
             devoptimus/php-composer:latest
-
-      - name: Docker Hub Login
-        uses: docker/login-action@v3.0.0
-        with:
-          username: ${{ secrets.DOCKERHUB_USER }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
