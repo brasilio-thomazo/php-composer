@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:latest as php_cli
 
 ENV EXTS=""
 ENV PECL_EXTS=""
@@ -14,8 +14,16 @@ RUN apk add --no-cache --no-interactive bash icu-data-full php82 php82-zip \
     $(echo "${EXTS}" | awk -F ' ' '{for(i=1;i<=NF;i++) print "php82-"$i}') \
     php81-pecl-redis php81-pecl-imagick \
     $(echo "${PECL_EXTS}" | awk -F ' ' '{for(i=1;i<=NF;i++) print "php82-pecl-"$i}')
+
+FROM php_cli as php_composer
+
+ENV EXTS=""
+ENV PECL_EXTS=""
+
+RUN apk add --no-cache --no-interactive \
+    $(echo "${EXTS}" | awk -F ' ' '{for(i=1;i<=NF;i++) print "php82-"$i}') \
+    $(echo "${PECL_EXTS}" | awk -F ' ' '{for(i=1;i<=NF;i++) print "php82-pecl-"$i}')
+
 RUN which php || ln -sf /usr/bin/php82 /usr/bin/php
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer
-
-COPY policy.xml /etc/ImageMagick-7/policy.xml
