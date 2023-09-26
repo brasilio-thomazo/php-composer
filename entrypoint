@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -eu
+
+templates=$(ls /etc/php/fpm/pool.d/*.template)
+
+for file in $templates; do
+    if [ -f "$file" ]; then
+        config_file="/etc/php/fpm/pool.d/"$(basename "${file%.*}.ini")
+        envsubst "$(printf '${%s} ' $(env | cut -d'=' -f1))" < $file > $config_file
+    fi
+done
+
+php-fpm -e -y /etc/php/fpm/php-fpm.ini
