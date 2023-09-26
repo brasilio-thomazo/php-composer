@@ -10,6 +10,8 @@ RUN apk add --no-cache --no-interactive bash icu-data-full php82 php82-zip \
     php82-ctype php82-common php82-calendar php82-bcmath php82-pecl-redis \
     php82-pecl-imagick
 
+RUN which php || ln -sf /usr/bin/php82 /usr/bin/php
+
 COPY install-php-ext /usr/local/bin/install-php-ext
 COPY install-php-pecl-ext /usr/local/bin/install-php-pecl-ext
 
@@ -18,7 +20,6 @@ COPY install-php-pecl-ext /usr/local/bin/install-php-pecl-ext
 #
 FROM php_cli as php_composer
 
-RUN which php || ln -sf /usr/bin/php82 /usr/bin/php
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer
 
