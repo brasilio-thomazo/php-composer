@@ -23,7 +23,7 @@ jobs:
           target: "php_cli"
           push: true
           tags: |
-            devoptimus/php-cli:0.0.2
+            devoptimus/php-cli:0.0.3
             devoptimus/php-cli:latest
 
       - name: Build php-composer image
@@ -33,7 +33,7 @@ jobs:
           target: "php_composer"
           push: true
           tags: |
-            devoptimus/php-composer:0.0.2
+            devoptimus/php-composer:0.0.3
             devoptimus/php-composer:latest
 
       - name: Build php-fpm image
@@ -43,5 +43,5 @@ jobs:
           target: "php_fpm"
           push: true
           tags: |
-            devoptimus/php-fpm:0.0.2
+            devoptimus/php-fpm:0.0.3
             devoptimus/php-fpm:latest

@@ -27,29 +27,14 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 #
 FROM php_composer as php_fpm
 
-ENV USER_UID=1000
-ENV USER_GID=1000
-
-RUN apk add --no-cache shadow doas php82-fpm
+RUN apk add --no-cache php82-fpm
 RUN which php-fpm || ln -sf /usr/sbin/php-fpm82 /usr/bin/php-fpm
 RUN mkdir -p /etc/php/fpm/pool.d/
 
 COPY php-fpm.ini /etc/php/fpm/
 COPY www.ini /etc/php/fpm/pool.d/
-COPY entrypoint /usr/local/bin/
 
-# CREATE USER AND GROUP
-RUN addgroup -g ${USER_UID} app
-RUN adduser -h /home/app -G app -u ${USER_GID} -D app
-# SET PERMISSION TO USER app
-RUN echo 'permit app as root' >> /etc/doas.d/doas.conf
-RUN echo 'permit nopass app as root' >> /etc/doas.d/doas.conf
-
-USER app
-RUN mkdir -p /home/app/public_html /home/app/php-info
-RUN echo "<?php phpinfo(); ?>" > /home/app/php-info/index.php
-
-ENTRYPOINT [ "entrypoint" ]
-EXPOSE 9000 8010
+ENTRYPOINT [ "php-fpm", "-e", "-y", "/etc/php/fpm/php-fpm.ini" ]
+EXPOSE 9000
 
 FROM php_cli
