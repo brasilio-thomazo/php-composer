@@ -1,13 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -eu
 
-templates=$(ls /etc/php/fpm/pool.d/*.template)
+current_uid=$(id -u "app")
+current_gid=$(id -g "app")
 
-for file in $templates; do
-    if [ -f "$file" ]; then
-        config_file="/etc/php/fpm/pool.d/"$(basename "${file%.*}.ini")
-        envsubst "$(printf '${%s} ' $(env | cut -d'=' -f1))" < $file > $config_file
-    fi
-done
+if [ "$current_uid" -ne "$UID" ]; then
+    doas usermod -u $UID app
+    doas find /home/app -not -user $UID -exec doas chown -h app {} \;
+fi
 
-php-fpm -e -y /etc/php/fpm/php-fpm.ini
+if [ "$current_gid" -ne "$GID" ]; then
+    doas groupmod -g $GID app
+    doas find /home/app -not -group $GID -exec doas chgrp -h app {} \;
+fi
+
+doas php-fpm -e -y /etc/php/fpm/php-fpm.ini

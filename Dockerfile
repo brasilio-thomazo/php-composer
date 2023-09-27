@@ -27,15 +27,26 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 # TARGET PHP-FPM
 #
 FROM php_composer as php_fpm
+ENV UID=1000
+ENV GID=1000
 
-RUN apk add --no-cache php82-fpm
+COPY entrypoint /usr/bin/
+
+RUN addgroup app \
+    && adduser -G app -s /bin/bash -D app \
+    && mkdir -p /home/app/public_html /run/php /etc/php/fpm/pool.d/ \
+    && chown app:app /home/app -R \
+    && apk add --no-cache php82-fpm doas shadow \
+    && echo 'permit nopass :wheel as root' >> /etc/doas.d/doas.conf \
+    && usermod -G wheel app
+
 RUN which php-fpm || ln -sf /usr/sbin/php-fpm82 /usr/bin/php-fpm
-RUN mkdir -p /etc/php/fpm/pool.d/
-
 COPY php-fpm.ini /etc/php/fpm/
 COPY www.ini /etc/php/fpm/pool.d/
 
-ENTRYPOINT [ "php-fpm", "-e", "-y", "/etc/php/fpm/php-fpm.ini" ]
+USER app
+WORKDIR /home/app/public_html
+ENTRYPOINT [ "entrypoint" ]
 EXPOSE 9000
 
 FROM php_cli
